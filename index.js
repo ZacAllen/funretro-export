@@ -4,13 +4,15 @@ const { chromium, firefox } = require('playwright');
 const { exit } = require('process');
 
 const [url, fileType, file] = process.argv.slice(2);
+const csv = "csv";
+const txt = "txt";
 
 if (!url) {
     throw 'Please provide a URL as the first argument.';
 }
-// if (!fileType || fileType != "csv" && fileType != "txt") {
-//     throw 'Please provide a file type, either "txt" or "csv" ';
-// }
+if (!fileType || fileType != csv && fileType != txt) {
+    throw 'Please provide a file type as the second argument, either "txt" or "csv" ';
+}
 
 async function run() {
     const browser = await firefox.launch();
@@ -26,11 +28,10 @@ async function run() {
         throw 'Board title does not exist. Please check if provided URL is correct.'
     }
     
-    // return writeTxt(boardTitle, page);
-    return writeCSV(page)
+    return fileType == txt ? writeTxt(boardTitle, page) : writeCSV(boardTitle, page)
 }
 
-async function writeCSV(page) {
+async function writeCSV(boardTitle, page) {
     let output = [];
     const columns = await page.$$('.easy-card-list');
     for (let i = 0; i < columns.length; i++) {
@@ -67,8 +68,12 @@ async function writeCSV(page) {
         }
     }
     console.log(output)
-    return ""
+    let csvString = "";
+    output.forEach((text, i) => {
+        csvString += text.toString() + "\n"
+    })
     
+    return boardTitle + "\n" + csvString;
 }
 
 async function writeTxt(boardTitle, page) {
@@ -97,7 +102,12 @@ async function writeTxt(boardTitle, page) {
 }
 
 function writeToFile(filePath, data) {
-    const resolvedPath = path.resolve(filePath || `../${data.split('\n')[0].replace('/', '')}.txt`);
+    let resolvedPath = null;
+    fileType == txt ? resolvedPath = path.resolve(filePath || `../${data.split('\n')[0].replace('/', '')}.txt`) :
+        resolvedPath = path.resolve(filePath || `../${data.split('\n')[0].replace('/', '')}.csv`)
+    if (fileType != txt) {
+        data = data.split("\n").slice(1).join("\n")
+    }
     fs.writeFile(resolvedPath, data, (error) => {
         if (error) {
             throw error;
