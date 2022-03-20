@@ -46,17 +46,12 @@ async function writeCSV(page) {
         for (let k = 0; k < messages.length; k++) {
             const messageText = await messages[k].$eval('.easy-card-main .easy-card-main-content .text', (node) => node.innerText.trim());
             const votes = await messages[k].$eval('.easy-card-votes-container .easy-badge-votes', (node) => node.innerText.trim());
-            // console.log("COLUMN INDEX: " + i + " MESSAGE: " + messageText)
-            // console.log(output)
-            console.log("COLUMN INDEX: " + i); 
             if (votes != 0) {
                 if (i == 0) {
-                    console.log("CHOSEN MESSAGE: " + messageText)
                     output[rowcount].push(messageText)
                     rowcount++;
                     selected = true;
                 } else {
-                    console.log("CHOSEN MESSAGE: " + messageText)
                     output[rowcount].push(messageText)
                     rowcount++;
                     selected = true;
@@ -65,7 +60,6 @@ async function writeCSV(page) {
             blankCount++;
         }
         if(!selected) {
-            console.log("WTFFFFFFFFFFF " + blankCount)
             while(blankCount > 0) {
                 output[blankCount].push(" ")
                 blankCount--;
