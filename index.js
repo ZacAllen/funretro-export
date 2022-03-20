@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { chromium } = require('playwright');
+const { chromium, firefox } = require('playwright');
 const { exit } = require('process');
 
 const [url, fileType, file] = process.argv.slice(2);
@@ -8,15 +8,16 @@ const [url, fileType, file] = process.argv.slice(2);
 if (!url) {
     throw 'Please provide a URL as the first argument.';
 }
-if (!fileType || fileType != "csv" && fileType != "txt") {
-    throw 'Please provide a file type, either "txt" or "csv" ';
-}
+// if (!fileType || fileType != "csv" && fileType != "txt") {
+//     throw 'Please provide a file type, either "txt" or "csv" ';
+// }
 
 async function run() {
-    const browser = await chromium.launch();
+    const browser = await firefox.launch();
     const page = await browser.newPage();
 
     await page.goto(url);
+    // waitForSelector timing out in Chromium?
     await page.waitForSelector('.easy-card-list');
 
     const boardTitle = await page.$eval('.board-name', (node) => node.innerText.trim().replace(/\s/g, ''));
@@ -25,11 +26,55 @@ async function run() {
         throw 'Board title does not exist. Please check if provided URL is correct.'
     }
     
-    return writeTxt(boardTitle, page);
+    // return writeTxt(boardTitle, page);
+    return writeCSV(page)
 }
 
-async function writeCSV(boardTitle, page) {
-
+async function writeCSV(page) {
+    let output = [];
+    const columns = await page.$$('.easy-card-list');
+    for (let i = 0; i < columns.length; i++) {
+        output.push([])
+    }
+    for (let i = 0; i < columns.length; i++) {
+        const columnTitle = await columns[i].$eval('.column-header', (node) => node.innerText.trim());
+        output[0].push(columnTitle);
+        const messages = await columns[i].$$('.easy-board-front');
+        let rowcount = 1;
+        let blankCount = 0;
+        let selected = false
+        for (let k = 0; k < messages.length; k++) {
+            const messageText = await messages[k].$eval('.easy-card-main .easy-card-main-content .text', (node) => node.innerText.trim());
+            const votes = await messages[k].$eval('.easy-card-votes-container .easy-badge-votes', (node) => node.innerText.trim());
+            // console.log("COLUMN INDEX: " + i + " MESSAGE: " + messageText)
+            // console.log(output)
+            console.log("COLUMN INDEX: " + i); 
+            if (votes != 0) {
+                if (i == 0) {
+                    console.log("CHOSEN MESSAGE: " + messageText)
+                    output[rowcount].push(messageText)
+                    rowcount++;
+                    selected = true;
+                } else {
+                    console.log("CHOSEN MESSAGE: " + messageText)
+                    output[rowcount].push(messageText)
+                    rowcount++;
+                    selected = true;
+                }
+            }
+            blankCount++;
+        }
+        if(!selected) {
+            console.log("WTFFFFFFFFFFF " + blankCount)
+            while(blankCount > 0) {
+                output[blankCount].push(" ")
+                blankCount--;
+            }
+        }
+    }
+    console.log(output)
+    return ""
+    
 }
 
 async function writeTxt(boardTitle, page) {
