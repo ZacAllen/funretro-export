@@ -100,9 +100,9 @@ async function writeTxt(boardTitle, page) {
         if (messages.length) {
             parsedText += columnTitle + '\n';
         }
-        for (let i = 0; i < messages.length; i++) {
-            const messageText = await messages[i].$eval('.easy-card-main .easy-card-main-content .text', (node) => node.innerText.trim());
-            const votes = await messages[i].$eval('.easy-card-votes-container .easy-badge-votes', (node) => node.innerText.trim());
+        for (let k = 0; k < messages.length; k++) {
+            const messageText = await messages[k].$eval('.easy-card-main .easy-card-main-content .text', (node) => node.innerText.trim());
+            const votes = await messages[k].$eval('.easy-card-votes-container .easy-badge-votes', (node) => node.innerText.trim());
             parsedText += `- ${messageText} (${votes})` + '\n';
         }
 
@@ -116,8 +116,8 @@ async function writeTxt(boardTitle, page) {
 function writeToFile(filePath, data) {
     filePath != "" ? filePath += "." + fileType : filePath;
     let resolvedPath = null;
-    fileType == txt ? resolvedPath = path.resolve(filePath || `../${data.split('\n')[0].replace('/', '')}.txt`) :
-        resolvedPath = path.resolve(filePath || `../${data.split('\n')[0].replace('/', '')}.csv`)
+    fileType == txt ? resolvedPath = path.resolve(filePath || `${data.split('\n')[0].replace('/', '')}.txt`) :
+        resolvedPath = path.resolve(filePath || `${data.split('\n')[0].replace('/', '')}.csv`)
     if (fileType != txt) {
         data = data.split("\n").slice(1).join("\n")
     }
