@@ -2,10 +2,20 @@ const fs = require('fs');
 const path = require('path');
 const { chromium, firefox } = require('playwright');
 const { exit } = require('process');
+const prompt = require('prompt-sync')();
 
+/*
 const [url, fileType, file] = process.argv.slice(2);
 const csv = "csv";
 const txt = "txt";
+*/
+
+const csv = "csv";
+const txt = "txt";
+
+let url = prompt("Enter an EasyRetro.io board url: ")
+let fileType = prompt("Enter file type (csv or txt): ")
+let file = prompt("Enter file name (Press enter to use default): ")
 
 if (!url) {
     throw 'Please provide a URL as the first argument.';
@@ -34,9 +44,11 @@ async function run() {
 async function writeCSV(boardTitle, page) {
     let output = [];
     const columns = await page.$$('.easy-card-list');
-    for (let i = 0; i < columns.length; i++) {
+
+    columns.forEach(column => {
         output.push([])
-    }
+    })
+    
     for (let i = 0; i < columns.length; i++) {
         const columnTitle = await columns[i].$eval('.column-header', (node) => node.innerText.trim());
         output[0].push(columnTitle);
@@ -49,11 +61,11 @@ async function writeCSV(boardTitle, page) {
             const votes = await messages[k].$eval('.easy-card-votes-container .easy-badge-votes', (node) => node.innerText.trim());
             if (votes != 0) {
                 if (i == 0) {
-                    output[rowcount].push(messageText)
+                    output[rowcount].push(messageText + " (" + votes + ")")
                     rowcount++;
                     selected = true;
                 } else {
-                    output[rowcount].push(messageText)
+                    output[rowcount].push(messageText + " (" + votes + ")")
                     rowcount++;
                     selected = true;
                 }
@@ -102,6 +114,7 @@ async function writeTxt(boardTitle, page) {
 }
 
 function writeToFile(filePath, data) {
+    filePath != "" ? filePath += "." + fileType : filePath;
     let resolvedPath = null;
     fileType == txt ? resolvedPath = path.resolve(filePath || `../${data.split('\n')[0].replace('/', '')}.txt`) :
         resolvedPath = path.resolve(filePath || `../${data.split('\n')[0].replace('/', '')}.csv`)
